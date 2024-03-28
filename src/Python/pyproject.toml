@@ -10,3 +10,5 @@ include = ["ccpi", "ccpi.*"]
 version = "24.0.0"
 name = "ccpi-regulariser"
 dependencies = ["numpy"]
+[project.optional-dependencies]
+gpu = ["cupy"]
