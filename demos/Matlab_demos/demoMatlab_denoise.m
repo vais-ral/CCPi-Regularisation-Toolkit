@@ -9,7 +9,7 @@ addpath(Path1);
 addpath(Path2);
 addpath(Path3);
 
-Im = double(imread('lena_gray_512.tif'))/255;  % loading image
+Im = double(imread('peppers.tif'))/255;  % loading image
 u0 = Im + .05*randn(size(Im)); u0(u0 < 0) = 0;
 figure; imshow(u0, [0 1]); title('Noisy image');
 %%

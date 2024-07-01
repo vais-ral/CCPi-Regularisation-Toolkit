@@ -9,6 +9,8 @@ import numpy as np
 import cupy as cp
 import os
 import timeit
+from imageio.v2 import imread
+
 from ccpi.filters.regularisersCuPy import ROF_TV as ROF_TV_cupy
 from ccpi.filters.regularisersCuPy import PD_TV as PD_TV_cupy
 
@@ -28,13 +30,12 @@ def printParametersToString(pars):
             txt += '\n'
         return txt
 ###############################################################################
-filename = os.path.join("data" ,"lena_gray_512.tif")
+filename = os.path.join( "../test/test_data" ,"peppers.tif")
 
 # read image
-Im = plt.imread(filename)
-Im = np.asarray(Im, dtype='float32')
+Im = imread(filename)
 
-Im = Im/255
+Im = Im/255.0
 perc = 0.05
 u0 = Im + np.random.normal(loc = 0 ,
                                   scale = perc * Im , 
@@ -47,19 +48,16 @@ u0 = u0.astype('float32')
 u_ref = u_ref.astype('float32')
 
 slices = 20
-Im = plt.imread(filename)
-Im = np.asarray(Im, dtype='float32')
 
-Im = Im/255
-perc = 0.05
-
-noisyVol = np.zeros((slices,N,N),dtype='float32')
-idealVol = np.zeros((slices,N,N),dtype='float32')
+noisyVol = np.zeros((slices,N,M),dtype='float32')
+noisyRef = np.zeros((slices,N,M),dtype='float32')
+idealVol = np.zeros((slices,N,M),dtype='float32')
 
 for i in range (slices):
-    noisyVol[i,:,:] = Im + np.random.normal(loc = 0 , scale = perc * Im , size = np.shape(Im))    
+    noisyVol[i,:,:] = Im + np.random.normal(loc = 0 , scale = perc * Im , size = np.shape(Im))
+    noisyRef[i,:,:] = Im + np.random.normal(loc = 0 , scale = 0.01 * Im , size = np.shape(Im))
     idealVol[i,:,:] = Im
-
+    
 noisyVol = np.float32(noisyVol)
 
 # move numpy array to CuPy. 
@@ -127,8 +125,7 @@ start_time = timeit.default_timer()
 with cp.cuda.Device(gpu_device):
     pdtv_gpu3D = PD_TV_cupy(noisyVol_cp,
                     regularisation_parameter=0.06,
-                    iterations = 3000,
-                    tolerance_param = 0.0,
+                    iterations = 2000,
                     methodTV=0,
                     nonneg=0,
                     lipschitz_const=8,

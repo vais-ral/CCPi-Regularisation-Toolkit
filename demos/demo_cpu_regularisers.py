@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import timeit
+from imageio.v2 import imread
 
 from ccpi.filters.regularisers import ROF_TV, FGP_TV, PD_TV, SB_TV, TGV, LLT_ROF, FGP_dTV, TNV, NDF, Diff4th
 from ccpi.filters.regularisers import PatchSelect, NLTV
@@ -32,14 +33,13 @@ def printParametersToString(pars):
         return txt
 ###############################################################################
 
-filename = os.path.join( "data" ,"lena_gray_512.tif")
+filename = os.path.join( "../test/test_data" ,"peppers.tif")
 
 # read image
-Im = plt.imread(filename)
-Im = np.asarray(Im, dtype='float32')
+Im = imread(filename)
 
 Im = Im/255.0
-perc = 0.05
+perc = 0.08
 u0 = Im + np.random.normal(loc = 0 ,
                                   scale = perc * Im , 
                                   size = np.shape(Im))
@@ -52,24 +52,9 @@ u_ref = Im + np.random.normal(loc = 0 ,
 u0 = u0.astype('float32')
 u_ref = u_ref.astype('float32')
 
-# change dims to check that modules work with non-squared images
-"""
-M = M-100
-u_ref2 = np.zeros([N,M],dtype='float32')
-u_ref2[:,0:M] = u_ref[:,0:M]
-u_ref = u_ref2
-del u_ref2
-
-u02 = np.zeros([N,M],dtype='float32')
-u02[:,0:M] = u0[:,0:M]
-u0 = u02
-del u02
-
-Im2 = np.zeros([N,M],dtype='float32')
-Im2[:,0:M] = Im[:,0:M]
-Im = Im2
-del Im2
-"""
+plt.figure()
+plt.imshow(u0, cmap="gray")
+plt.show()
 #%%
 print ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 print ("_______________ROF-TV (2D)_________________")
@@ -90,13 +75,14 @@ pars = {'algorithm': ROF_TV, \
         'time_marching_parameter': 0.001,\
         'tolerance_constant':1e-06}
 
+info_vec = np.zeros(2, dtype = np.float32)
 print ("#############ROF TV CPU####################")
 start_time = timeit.default_timer()
-(rof_cpu,info_vec_cpu) = ROF_TV(pars['input'],
+rof_cpu = ROF_TV(pars['input'],
              pars['regularisation_parameter'],
              pars['number_of_iterations'],
              pars['time_marching_parameter'],
-             pars['tolerance_constant'], 'cpu')
+             pars['tolerance_constant'], device = 'cpu', infovector=info_vec)
 
 Qtools = QualityTools(Im, rof_cpu)
 pars['rmse'] = Qtools.rmse()
@@ -113,7 +99,6 @@ a.text(0.15, 0.25, txtstr, transform=a.transAxes, fontsize=14,
          verticalalignment='top', bbox=props)
 imgplot = plt.imshow(rof_cpu, cmap="gray")
 plt.title('{}'.format('CPU results'))
-
 #%%
 print ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 print ("_______________FGP-TV (2D)__________________")
@@ -137,12 +122,12 @@ pars = {'algorithm' : FGP_TV, \
         
 print ("#############FGP TV CPU####################")
 start_time = timeit.default_timer()
-(fgp_cpu,info_vec_cpu) = FGP_TV(pars['input'], 
+fgp_cpu = FGP_TV(pars['input'], 
               pars['regularisation_parameter'],
               pars['number_of_iterations'],
               pars['tolerance_constant'], 
               pars['methodTV'],
-              pars['nonneg'],'cpu')
+              pars['nonneg'], device ='cpu')
 
 Qtools = QualityTools(Im, fgp_cpu)
 pars['rmse'] = Qtools.rmse()
@@ -184,13 +169,15 @@ pars = {'algorithm' : PD_TV, \
         
 print ("#############PD TV CPU####################")
 start_time = timeit.default_timer()
-(pd_cpu,info_vec_cpu) = PD_TV(pars['input'], 
-              pars['regularisation_parameter'],
-              pars['number_of_iterations'],
-              pars['tolerance_constant'], 
-              pars['methodTV'],
-              pars['nonneg'],
-              pars['lipschitz_const'],'cpu')
+pd_cpu = PD_TV(pars["input"],
+        pars["regularisation_parameter"],
+        pars["number_of_iterations"],
+        pars["tolerance_constant"],
+        pars["lipschitz_const"],
+        pars["methodTV"],
+        pars["nonneg"],
+        device="cpu",
+        )
 
 Qtools = QualityTools(Im, pd_cpu)
 pars['rmse'] = Qtools.rmse()
@@ -223,17 +210,17 @@ imgplot = plt.imshow(u0,cmap="gray")
 pars = {'algorithm' : SB_TV, \
         'input' : u0,\
         'regularisation_parameter':0.02, \
-        'number_of_iterations' :1 ,\
+        'number_of_iterations' :100 ,\
         'tolerance_constant':1e-06,\
         'methodTV': 0}
         
 print ("#############SB TV CPU####################")
 start_time = timeit.default_timer()
-(sb_cpu,info_vec_cpu) = SB_TV(pars['input'], 
+sb_cpu = SB_TV(pars['input'], 
               pars['regularisation_parameter'],
               pars['number_of_iterations'],
               pars['tolerance_constant'], 
-              pars['methodTV'],'cpu')
+              pars['methodTV'], device='cpu')
              
 #Qtools = QualityTools(Im, sb_cpu)
 #pars['rmse'] = Qtools.rmse()
@@ -274,12 +261,12 @@ pars = {'algorithm' : LLT_ROF, \
         
 print ("#############LLT- ROF CPU####################")
 start_time = timeit.default_timer()
-(lltrof_cpu,info_vec_cpu) = LLT_ROF(pars['input'], 
+lltrof_cpu = LLT_ROF(pars['input'], 
               pars['regularisation_parameterROF'],
               pars['regularisation_parameterLLT'],
               pars['number_of_iterations'],
               pars['time_marching_parameter'],
-              pars['tolerance_constant'], 'cpu')
+              pars['tolerance_constant'], device = 'cpu')
 
 Qtools = QualityTools(Im, lltrof_cpu)
 pars['rmse'] = Qtools.rmse()

@@ -39,7 +39,7 @@ jobs:
     - name: test
       run: |
         conda activate "${{ steps.reqs.outputs.envname }}"
-        PYTHONPATH=./src/Python python -m unittest discover ./test
+        PYTHONPATH=./src/Python python -m pytest -s ./test
     - if: always()
       name: Post Run conda-incubator/setup-miniconda@v3
       shell: bash
@@ -71,7 +71,7 @@ jobs:
         cmake --build ./build_proj --target install
         pip install ./src/Python
     - name: test
-      run: PYTHONPATH=./src/Python python -m unittest discover ./test
+      run: PYTHONPATH=./src/Python python -m pytest -s ./test
   conda:
     defaults: {run: {shell: 'bash -el {0}'}}
     runs-on: ubuntu-latest

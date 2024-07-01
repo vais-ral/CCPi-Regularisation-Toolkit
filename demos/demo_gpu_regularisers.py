@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import timeit
+from imageio.v2 import imread
+
 from ccpi.filters.regularisers import ROF_TV, FGP_TV, PD_TV, SB_TV, TGV, LLT_ROF, FGP_dTV, NDF, Diff4th
 from ccpi.filters.regularisers import PatchSelect, NLTV
 from ccpi.supp.qualitymetrics import QualityTools
@@ -30,16 +32,14 @@ def printParametersToString(pars):
             txt += '\n'
         return txt
 ###############################################################################
-#%%
-os.chdir(os.path.join("..", "demos"))
-filename = os.path.join( "data" ,"lena_gray_512.tif")
+
+filename = os.path.join( "../test/test_data" ,"peppers.tif")
 
 # read image
-Im = plt.imread(filename)                     
-Im = np.asarray(Im, dtype='float32')
+Im = imread(filename)
 
-Im = Im/255
-perc = 0.05
+Im = Im/255.0
+perc = 0.08
 u0 = Im + np.random.normal(loc = 0 ,
                                   scale = perc * Im , 
                                   size = np.shape(Im))
@@ -51,23 +51,10 @@ u_ref = Im + np.random.normal(loc = 0 ,
 # f = np.frompyfunc(lambda x: 0 if x < 0 else x, 1,1)
 u0 = u0.astype('float32')
 u_ref = u_ref.astype('float32')
-"""
-M = M-100
-u_ref2 = np.zeros([N,M],dtype='float32')
-u_ref2[:,0:M] = u_ref[:,0:M]
-u_ref = u_ref2
-del u_ref2
 
-u02 = np.zeros([N,M],dtype='float32')
-u02[:,0:M] = u0[:,0:M]
-u0 = u02
-del u02
-
-Im2 = np.zeros([N,M],dtype='float32')
-Im2[:,0:M] = Im[:,0:M]
-Im = Im2
-del Im2
-"""
+plt.figure()
+plt.imshow(u0, cmap="gray")
+plt.show()
 #%%
 
 print ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -180,7 +167,7 @@ pars = {'algorithm' : PD_TV, \
         'nonneg': 1,
         'lipschitz_const' : 8}
         
-print ("#############PD TV CPU####################")
+print ("#############PD TV GPU####################")
 start_time = timeit.default_timer()
 pd_gpu= PD_TV(pars['input'], 
               pars['regularisation_parameter'],
@@ -318,7 +305,7 @@ pars = {'algorithm' : TGV, \
         'LipshitzConstant' :12 ,\
         'tolerance_constant':1e-06}
         
-print ("#############TGV CPU####################")
+print ("#############TGV GPU####################")
 start_time = timeit.default_timer()
 tgv_gpu = TGV(pars['input'], 
               pars['regularisation_parameter'],
@@ -412,7 +399,7 @@ pars = {'algorithm' : Diff4th, \
         'time_marching_parameter':0.001,\
         'tolerance_constant':1e-06}
         
-print ("#############DIFF4th CPU################")
+print ("#############DIFF4th GPU################")
 start_time = timeit.default_timer()
 diff4_gpu = Diff4th(pars['input'], 
               pars['regularisation_parameter'],
@@ -470,7 +457,7 @@ print ("___Nonlocal Total Variation penalty____")
 print ("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 ## plot 
 fig = plt.figure()
-plt.suptitle('Performance of NLTV regulariser using the CPU')
+plt.suptitle('Performance of NLTV regulariser using the GPU')
 a=fig.add_subplot(1,2,1)
 a.set_title('Noisy Image')
 imgplot = plt.imshow(u0,cmap="gray")

@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import timeit
+from imageio.v2 import imread
+
+
 from ccpi.filters.regularisers import ROF_TV, FGP_TV, PD_TV, SB_TV, TGV, LLT_ROF, FGP_dTV, NDF, Diff4th
 from ccpi.supp.qualitymetrics import QualityTools
 ###############################################################################
@@ -30,14 +33,12 @@ def printParametersToString(pars):
         return txt
 ###############################################################################
 #%%
-os.chdir(os.path.join("..", "demos"))
-filename = os.path.join( "data" ,"lena_gray_512.tif")
+filename = os.path.join( "../test/test_data" ,"peppers.tif")
 
 # read image
-Im = plt.imread(filename)                     
-Im = np.asarray(Im, dtype='float32')
+Im = imread(filename)
 
-Im = Im/255
+Im = Im/255.0
 perc = 0.05
 u0 = Im + np.random.normal(loc = 0 ,
                                   scale = perc * Im , 
@@ -50,33 +51,8 @@ u_ref = Im + np.random.normal(loc = 0 ,
 # f = np.frompyfunc(lambda x: 0 if x < 0 else x, 1,1)
 u0 = u0.astype('float32')
 u_ref = u_ref.astype('float32')
-"""
-M = M-100
-u_ref2 = np.zeros([N,M],dtype='float32')
-u_ref2[:,0:M] = u_ref[:,0:M]
-u_ref = u_ref2
-del u_ref2
-
-u02 = np.zeros([N,M],dtype='float32')
-u02[:,0:M] = u0[:,0:M]
-u0 = u02
-del u02
-
-Im2 = np.zeros([N,M],dtype='float32')
-Im2[:,0:M] = Im[:,0:M]
-Im = Im2
-del Im2
-"""
-
 
 slices = 20
-
-filename = os.path.join( "data" ,"lena_gray_512.tif")
-Im = plt.imread(filename)
-Im = np.asarray(Im, dtype='float32')
-
-Im = Im/255
-perc = 0.05
 
 noisyVol = np.zeros((slices,N,N),dtype='float32')
 noisyRef = np.zeros((slices,N,N),dtype='float32')
@@ -108,7 +84,7 @@ pars = {'algorithm': ROF_TV, \
         'time_marching_parameter': 0.0007,\
         'tolerance_constant':1e-06}
 
-print ("#############ROF TV CPU####################")
+print ("#############ROF TV GPU####################")
 start_time = timeit.default_timer()
 rof_gpu3D = ROF_TV(pars['input'],
              pars['regularisation_parameter'],
@@ -285,7 +261,7 @@ pars = {'algorithm' : LLT_ROF, \
         'time_marching_parameter' :0.001 ,\
         'tolerance_constant':1e-06}
 
-print ("#############LLT ROF CPU####################")
+print ("#############LLT ROF GPU####################")
 start_time = timeit.default_timer()
 lltrof_gpu3D = LLT_ROF(pars['input'], 
               pars['regularisation_parameterROF'],
@@ -341,6 +317,7 @@ tgv_gpu3D   = TGV(pars['input'],
               pars['number_of_iterations'],
               pars['LipshitzConstant'],
               pars['tolerance_constant'], device='gpu', infovector=info_vec_gpu)
+
 
 Qtools = QualityTools(idealVol, tgv_gpu3D)
 pars['rmse'] = Qtools.rmse()
@@ -425,7 +402,7 @@ pars = {'algorithm' : Diff4th, \
         'time_marching_parameter':0.001,\
         'tolerance_constant':1e-06}
         
-print ("#############DIFF4th CPU################")
+print ("#############DIFF4th GPU################")
 start_time = timeit.default_timer()
 diff4_gpu3D = Diff4th(pars['input'], 
               pars['regularisation_parameter'],

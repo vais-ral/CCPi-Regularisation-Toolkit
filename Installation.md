@@ -56,7 +56,7 @@ conda install ccpi-regulariser -c ccpi -c conda-forge
 #### Python (conda-build)
 
 ```sh
-conda build recipe/ --numpy 1.23 --python 3.10
+conda build recipe/ --numpy 1.26 --python 3.10 -c conda-forge
 conda install ccpi-regulariser --use-local --force-reinstall # doesn't work?
 conda install -c file://${CONDA_PREFIX}/conda-bld/ ccpi-regulariser --force-reinstall # try this one
 cd demos/

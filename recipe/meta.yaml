@@ -17,7 +17,7 @@ test:
     - ./test/
   commands:
     - python -c "import os; print (os.getcwd())"
-    - python -m unittest discover -s test
+    - pytest -s
 requirements:
   build:
     - python
@@ -26,10 +26,14 @@ requirements:
     - pip
     - vc 14 # [win]
     - cmake
+    - pytest
+    - imageio
 
   run:
     - {{ pin_compatible('numpy', min_pin='x.x', max_pin='x.x') }}
     - python
+    - pytest
+    - imageio
     - vc 14 # [win]
     - libgcc-ng # [unix]
 
